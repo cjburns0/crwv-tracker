@@ -1,7 +1,7 @@
 [project]
-name = "repl-nix-workspace"
+name = "crwv-tracker"
 version = "0.1.0"
-description = "Add your description here"
+description = "CRWV stock price tracker and SMS notification system"
 requires-python = ">=3.11"
 dependencies = [
     "apscheduler>=3.11.0",
