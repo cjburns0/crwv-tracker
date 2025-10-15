@@ -14,59 +14,56 @@
             </div>
             <div class="card-body">
                 <form method="POST">
-                    <!-- Phone Numbers Section -->
+                    <!-- Users Section -->
                     <div class="mb-4">
                         <h5 class="mb-3">
-                            <i data-feather="phone" class="me-2"></i>
-                            Phone Numbers
+                            <i data-feather="users" class="me-2"></i>
+                            Registered Users
                         </h5>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="phone_number_1" class="form-label">Phone Number 1</label>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       id="phone_number_1" 
-                                       name="phone_number_1" 
-                                       value="{{ settings.phone_number_1 or '' }}"
-                                       placeholder="+1234567890">
-                                <div class="form-text">Include country code (e.g., +1 for US)</div>
+                        {% if users %}
+                            <div class="row">
+                                {% for user in users %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    {{ user.name[0].upper() }}
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0">{{ user.name }}</h6>
+                                                    <small class="text-muted">{{ user.phone_number }}</small>
+                                                </div>
+                                                <a href="{{ url_for('user_login', user_id=user.id) }}" class="btn btn-outline-primary btn-sm">
+                                                    <i data-feather="settings" class="me-1"></i>
+                                                    Access
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                             </div>
                             
-                            <div class="col-md-6 mb-3">
-                                <label for="phone_number_2" class="form-label">Phone Number 2</label>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       id="phone_number_2" 
-                                       name="phone_number_2" 
-                                       value="{{ settings.phone_number_2 or '' }}"
-                                       placeholder="+1234567890">
-                                <div class="form-text">Optional</div>
+                            <div class="alert alert-info">
+                                <i data-feather="info" class="me-2"></i>
+                                <strong>Individual Access:</strong> Each user has their own password and can only access their personal settings. 
+                                Phone numbers are automatically synced from user accounts.
                             </div>
-                        </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i data-feather="alert-triangle" class="me-2"></i>
+                                <strong>No users registered:</strong> You need to create user accounts for individual access. 
+                                Contact the administrator to set up user accounts.
+                            </div>
+                        {% endif %}
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="phone_number_3" class="form-label">Phone Number 3</label>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       id="phone_number_3" 
-                                       name="phone_number_3" 
-                                       value="{{ settings.phone_number_3 or '' }}"
-                                       placeholder="+1234567890">
-                                <div class="form-text">Optional</div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="phone_number_4" class="form-label">Phone Number 4</label>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       id="phone_number_4" 
-                                       name="phone_number_4" 
-                                       value="{{ settings.phone_number_4 or '' }}"
-                                       placeholder="+1234567890">
-                                <div class="form-text">Optional</div>
-                            </div>
+                        <div class="text-center">
+                            <a href="{{ url_for('users') }}" class="btn btn-outline-primary">
+                                <i data-feather="users" class="me-1"></i>
+                                View All Users
+                            </a>
                         </div>
                     </div>
 

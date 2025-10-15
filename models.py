@@ -1,6 +1,18 @@
 from app import db
 from datetime import datetime
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    phone_number = db.Column(db.String(20), nullable=False, unique=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<User {self.name}>'
+
 class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     phone_number_1 = db.Column(db.String(20), nullable=True)

@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify, session
 from app import app, db
-from models import Settings, NotificationLog, StockData
+from models import Settings, NotificationLog, StockData, User
 from stock_service import get_current_stock_price, get_stock_history
 from sms_service import send_stock_notification
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -56,6 +56,10 @@ def check_settings_access():
         return session.get('settings_authenticated', False)
     return True
 
+def check_user_access(user_id):
+    """Check if user has access to their specific settings"""
+    return session.get('user_authenticated', {}).get(str(user_id), False)
+
 @app.route('/settings/login', methods=['GET', 'POST'])
 def settings_login():
     """Login page for password-protected settings"""
@@ -81,6 +85,91 @@ def settings_logout():
     session.pop('settings_authenticated', None)
     flash('Logged out from settings.', 'info')
     return redirect(url_for('index'))
+
+@app.route('/user/login/<int:user_id>', methods=['GET', 'POST'])
+def user_login(user_id):
+    """Login page for individual user settings"""
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        if check_password_hash(user.password_hash, password):
+            if 'user_authenticated' not in session:
+                session['user_authenticated'] = {}
+            session['user_authenticated'][str(user_id)] = True
+            flash(f'Welcome back, {user.name}!', 'success')
+            return redirect(url_for('user_settings', user_id=user_id))
+        else:
+            flash('Incorrect password. Please try again.', 'error')
+    
+    return render_template('user_login.html', user=user)
+
+@app.route('/user/logout/<int:user_id>')
+def user_logout(user_id):
+    """Logout from user settings"""
+    if 'user_authenticated' in session:
+        session['user_authenticated'].pop(str(user_id), None)
+    flash('Logged out successfully.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/user/settings/<int:user_id>', methods=['GET', 'POST'])
+def user_settings(user_id):
+    """Individual user settings page"""
+    user = User.query.get_or_404(user_id)
+    
+    # Check access
+    if not check_user_access(user_id):
+        return redirect(url_for('user_login', user_id=user_id))
+    
+    if request.method == 'POST':
+        try:
+            # Handle password change
+            if 'new_password' in request.form:
+                new_password = request.form.get('new_password', '').strip()
+                confirm_password = request.form.get('confirm_password', '').strip()
+                
+                if new_password:
+                    if new_password == confirm_password:
+                        user.password_hash = generate_password_hash(new_password)
+                        flash('Password updated successfully!', 'success')
+                    else:
+                        flash('Passwords do not match.', 'error')
+                        return render_template('user_settings.html', user=user)
+                else:
+                    flash('Password cannot be empty.', 'error')
+                    return render_template('user_settings.html', user=user)
+            
+            # Update phone number
+            new_phone = request.form.get('phone_number', '').strip()
+            if new_phone and new_phone != user.phone_number:
+                # Check if phone number is already taken
+                existing_user = User.query.filter_by(phone_number=new_phone).first()
+                if existing_user and existing_user.id != user.id:
+                    flash('This phone number is already registered to another user.', 'error')
+                    return render_template('user_settings.html', user=user)
+                user.phone_number = new_phone
+            
+            # Update name
+            new_name = request.form.get('name', '').strip()
+            if new_name:
+                user.name = new_name
+            
+            db.session.commit()
+            flash('Settings updated successfully!', 'success')
+            return redirect(url_for('user_settings', user_id=user_id))
+            
+        except Exception as e:
+            logging.error(f"Error updating user settings: {e}")
+            db.session.rollback()
+            flash('Error updating settings. Please try again.', 'error')
+    
+    return render_template('user_settings.html', user=user)
+
+@app.route('/users')
+def users():
+    """List all users"""
+    users_list = User.query.filter_by(is_active=True).all()
+    return render_template('users.html', users=users_list)
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
@@ -111,11 +200,15 @@ def settings():
                     session.pop('settings_authenticated', None)
                     flash('Password protection disabled.', 'info')
             
-            # Update phone numbers
-            settings_obj.phone_number_1 = request.form.get('phone_number_1', '').strip()
-            settings_obj.phone_number_2 = request.form.get('phone_number_2', '').strip()
-            settings_obj.phone_number_3 = request.form.get('phone_number_3', '').strip()
-            settings_obj.phone_number_4 = request.form.get('phone_number_4', '').strip()
+            # Update phone numbers from users
+            users = User.query.filter_by(is_active=True).order_by(User.id).all()
+            phone_numbers = [user.phone_number for user in users if user.phone_number]
+            
+            # Update the settings with current user phone numbers
+            settings_obj.phone_number_1 = phone_numbers[0] if len(phone_numbers) > 0 else None
+            settings_obj.phone_number_2 = phone_numbers[1] if len(phone_numbers) > 1 else None
+            settings_obj.phone_number_3 = phone_numbers[2] if len(phone_numbers) > 2 else None
+            settings_obj.phone_number_4 = phone_numbers[3] if len(phone_numbers) > 3 else None
             
             # Update notification settings
             settings_obj.notifications_enabled = 'notifications_enabled' in request.form
@@ -131,7 +224,9 @@ def settings():
             db.session.rollback()
             flash('Error updating settings. Please try again.', 'error')
     
-    return render_template('settings.html', settings=settings_obj)
+    # Get users for display
+    users_list = User.query.filter_by(is_active=True).order_by(User.id).all()
+    return render_template('settings.html', settings=settings_obj, users=users_list)
 
 @app.route('/test-notification', methods=['POST'])
 def test_notification():

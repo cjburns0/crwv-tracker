@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }} - Settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="user" class="me-2"></i>
+                    {{ user.name }} - Personal Settings
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- Personal Information Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i data-feather="user" class="me-2"></i>
+                            Personal Information
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="name" 
+                                       name="name" 
+                                       value="{{ user.name }}"
+                                       required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number" class="form-label">Phone Number</label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="phone_number" 
+                                       name="phone_number" 
+                                       value="{{ user.phone_number }}"
+                                       placeholder="+1234567890"
+                                       required>
+                                <div class="form-text">Include country code (e.g., +1 for US)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i data-feather="lock" class="me-2"></i>
+                            Password Security
+                        </h5>
+                        
+                        <div class="card bg-light text-dark">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="new_password" class="form-label">New Password</label>
+                                        <input type="password" 
+                                               class="form-control" 
+                                               id="new_password" 
+                                               name="new_password" 
+                                               placeholder="Enter new password">
+                                        <div class="form-text">Leave empty to keep current password</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                        <input type="password" 
+                                               class="form-control" 
+                                               id="confirm_password" 
+                                               name="confirm_password" 
+                                               placeholder="Confirm new password">
+                                        <div class="form-text">Must match the password above</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('user_logout', user_id=user.id) }}" class="btn btn-outline-secondary me-2">
+                            <i data-feather="log-out" class="me-1"></i>
+                            Logout
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-1"></i>
+                            Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="info" class="me-2"></i>
+                    Account Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Account Details</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Member since:</strong> {{ user.created_at.strftime('%B %d, %Y') }}</li>
+                            <li><strong>Last updated:</strong> {{ user.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</li>
+                            <li><strong>Status:</strong> 
+                                <span class="badge bg-success">Active</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Notification Settings</h6>
+                        <p class="text-muted small">
+                            You will receive CRWV stock notifications at market open (9:30 AM EST) 
+                            and market close (4:00 PM EST) on weekdays.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[method="POST"]');
+    const phoneInput = document.getElementById('phone_number');
+    
+    // Phone number formatting
+    phoneInput.addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');
+        if (value.length > 0 && !value.startsWith('1')) {
+            value = '1' + value;
+        }
+        if (value.length > 1) {
+            this.value = '+' + value;
+        }
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        const phone = document.getElementById('phone_number').value.trim();
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        // Validate phone number format
+        const phoneRegex = /^\+\d{11,15}$/;
+        if (!phoneRegex.test(phone)) {
+            e.preventDefault();
+            alert('Phone number must be in format +1234567890');
+            return;
+        }
+        
+        // Password validation
+        if (newPassword || confirmPassword) {
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match.');
+                return;
+            }
+            if (newPassword && newPassword.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
