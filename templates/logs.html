@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Notification Logs - CRWV Moon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="list" class="me-2"></i>
+                    Notification Logs
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if notifications.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <th>Message ID</th>
+                                    <th>Sent At</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notification in notifications.items %}
+                                <tr>
+                                    <td>
+                                        <span class="badge 
+                                            {% if notification.notification_type == 'open' %}bg-info
+                                            {% elif notification.notification_type == 'close' %}bg-warning
+                                            {% elif notification.notification_type == 'test' %}bg-secondary
+                                            {% else %}bg-primary{% endif %}">
+                                            {{ notification.notification_type.title() }}
+                                        </span>
+                                    </td>
+                                    <td>${{ "%.2f"|format(notification.stock_price) }}</td>
+                                    <td>
+                                        <code>****{{ notification.phone_number[-4:] }}</code>
+                                    </td>
+                                    <td>
+                                        {% if notification.status == 'sent' %}
+                                            <span class="badge bg-success">
+                                                <i data-feather="check" class="me-1"></i>
+                                                Sent
+                                            </span>
+                                        {% elif notification.status == 'failed' %}
+                                            <span class="badge bg-danger">
+                                                <i data-feather="x" class="me-1"></i>
+                                                Failed
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i data-feather="clock" class="me-1"></i>
+                                                Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if notification.message_sid %}
+                                            <code class="text-muted">{{ notification.message_sid[:8] }}...</code>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ notification.sent_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                                    <td>
+                                        {% if notification.error_message %}
+                                            <span class="text-danger" title="{{ notification.error_message }}">
+                                                <i data-feather="alert-triangle"></i>
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if notifications.pages > 1 %}
+                    <nav aria-label="Notification logs pagination">
+                        <ul class="pagination justify-content-center mt-4">
+                            {% if notifications.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('logs', page=notifications.prev_num) }}">
+                                        <i data-feather="chevron-left" class="me-1"></i>
+                                        Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in notifications.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != notifications.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('logs', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if notifications.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('logs', page=notifications.next_num) }}">
+                                        Next
+                                        <i data-feather="chevron-right" class="ms-1"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="display-1 mb-3">📱</div>
+                        <h5>No notifications sent yet</h5>
+                        <p class="text-muted">
+                            Notification logs will appear here once you start receiving SMS alerts.
+                        </p>
+                        <a href="{{ url_for('settings') }}" class="btn btn-primary">
+                            <i data-feather="settings" class="me-1"></i>
+                            Configure Settings
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        {% if notifications.items %}
+        <div class="row mt-4">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">{{ notifications.total }}</h5>
+                        <p class="card-text">Total Notifications</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">
+                            {% set sent_count = notifications.items | selectattr('status', 'equalto', 'sent') | list %}
+                            {{ sent_count | length }}
+                        </h5>
+                        <p class="card-text">Successfully Sent</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-danger">
+                            {% set failed_count = notifications.items | selectattr('status', 'equalto', 'failed') | list %}
+                            {{ failed_count | length }}
+                        </h5>
+                        <p class="card-text">Failed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-secondary">
+                            {% set pending_count = notifications.items | selectattr('status', 'equalto', 'pending') | list %}
+                            {{ pending_count | length }}
+                        </h5>
+                        <p class="card-text">Pending</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips for error messages
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

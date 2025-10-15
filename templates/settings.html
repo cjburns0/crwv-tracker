@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - CRWV Moon{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="settings" class="me-2"></i>
+                    Notification Settings
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- Phone Numbers Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i data-feather="phone" class="me-2"></i>
+                            Phone Numbers
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number_1" class="form-label">Phone Number 1</label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="phone_number_1" 
+                                       name="phone_number_1" 
+                                       value="{{ settings.phone_number_1 or '' }}"
+                                       placeholder="+1234567890">
+                                <div class="form-text">Include country code (e.g., +1 for US)</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number_2" class="form-label">Phone Number 2</label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="phone_number_2" 
+                                       name="phone_number_2" 
+                                       value="{{ settings.phone_number_2 or '' }}"
+                                       placeholder="+1234567890">
+                                <div class="form-text">Optional</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number_3" class="form-label">Phone Number 3</label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="phone_number_3" 
+                                       name="phone_number_3" 
+                                       value="{{ settings.phone_number_3 or '' }}"
+                                       placeholder="+1234567890">
+                                <div class="form-text">Optional</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number_4" class="form-label">Phone Number 4</label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="phone_number_4" 
+                                       name="phone_number_4" 
+                                       value="{{ settings.phone_number_4 or '' }}"
+                                       placeholder="+1234567890">
+                                <div class="form-text">Optional</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i data-feather="bell" class="me-2"></i>
+                            Notification Preferences
+                        </h5>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   role="switch" 
+                                   id="notifications_enabled" 
+                                   name="notifications_enabled" 
+                                   {% if settings.notifications_enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="notifications_enabled">
+                                Enable daily notifications
+                            </label>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="market_open_time" class="form-label">Market Open Notification</label>
+                                <input type="time" 
+                                       class="form-control" 
+                                       id="market_open_time" 
+                                       name="market_open_time" 
+                                       value="{{ settings.market_open_time }}">
+                                <div class="form-text">Time to send market open notification (EST)</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="market_close_time" class="form-label">Market Close Notification</label>
+                                <input type="time" 
+                                       class="form-control" 
+                                       id="market_close_time" 
+                                       name="market_close_time" 
+                                       value="{{ settings.market_close_time }}">
+                                <div class="form-text">Time to send market close notification (EST)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Protection Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i data-feather="lock" class="me-2"></i>
+                            Password Protection
+                        </h5>
+                        
+                        <div class="card bg-light text-dark">
+                            <div class="card-body">
+                                {% if settings.has_password_protection() %}
+                                    <div class="alert alert-info mb-3">
+                                        <i data-feather="shield" class="me-2"></i>
+                                        Settings are currently password protected.
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="new_password" class="form-label">
+                                            {% if settings.has_password_protection() %}
+                                                Change Password
+                                            {% else %}
+                                                Set Password
+                                            {% endif %}
+                                        </label>
+                                        <input type="password" 
+                                               class="form-control" 
+                                               id="new_password" 
+                                               name="new_password" 
+                                               placeholder="Enter new password">
+                                        <div class="form-text">Leave empty to {% if settings.has_password_protection() %}keep current{% else %}disable protection{% endif %}</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                                        <input type="password" 
+                                               class="form-control" 
+                                               id="confirm_password" 
+                                               name="confirm_password" 
+                                               placeholder="Confirm new password">
+                                        <div class="form-text">Must match the password above</div>
+                                    </div>
+                                </div>
+                                
+                                {% if settings.has_password_protection() %}
+                                <div class="text-end">
+                                    <a href="{{ url_for('settings_logout') }}" class="btn btn-outline-secondary btn-sm">
+                                        <i data-feather="log-out" class="me-1"></i>
+                                        Logout from Settings
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-1"></i>
+                            Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Test Notification Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="send" class="me-2"></i>
+                    Test Notifications
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Send a test notification to verify your SMS settings are working correctly.
+                    This will send a test message to all configured phone numbers.
+                </p>
+                
+                <form method="POST" action="{{ url_for('test_notification') }}">
+                    <button type="submit" 
+                            class="btn btn-outline-primary"
+                            {% if settings.get_phone_numbers()|length == 0 %}disabled{% endif %}>
+                        <i data-feather="send" class="me-1"></i>
+                        Send Test Notification
+                    </button>
+                </form>
+                
+                {% if settings.get_phone_numbers()|length == 0 %}
+                    <small class="text-muted d-block mt-2">
+                        Please configure at least one phone number to send test notifications.
+                    </small>
+                {% else %}
+                    <small class="text-muted d-block mt-2">
+                        Will send test to {{ settings.get_phone_numbers()|length }} configured number(s).
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Configuration Info -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="info" class="me-2"></i>
+                    Configuration Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Notification Schedule</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Market Open:</strong> Monday-Friday at {{ settings.market_open_time }} EST</li>
+                            <li><strong>Market Close:</strong> Monday-Friday at {{ settings.market_close_time }} EST</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Message Format</h6>
+                        <div class="bg-light text-dark p-2 rounded">
+                            <small>
+                                🌙 CRWV Moon - Market Open<br>
+                                💰 CRWV opened at $XX.XX<br>
+                                ⏰ 9:30 AM ET
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Required Environment Variables</h6>
+                    <p class="text-muted small">
+                        Make sure the following Twilio environment variables are configured:
+                        <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_PHONE_NUMBER</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[method="POST"]:not([action])');
+    const phoneInputs = form.querySelectorAll('input[type="tel"]');
+    
+    // Phone number formatting
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length > 0 && !value.startsWith('1')) {
+                value = '1' + value;
+            }
+            if (value.length > 1) {
+                this.value = '+' + value;
+            }
+        });
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        const phone1 = document.getElementById('phone_number_1').value.trim();
+        const phone2 = document.getElementById('phone_number_2').value.trim();
+        const phone3 = document.getElementById('phone_number_3').value.trim();
+        const phone4 = document.getElementById('phone_number_4').value.trim();
+        const notificationsEnabled = document.getElementById('notifications_enabled').checked;
+        
+        const phoneNumbers = [phone1, phone2, phone3, phone4].filter(phone => phone);
+        
+        if (notificationsEnabled && phoneNumbers.length === 0) {
+            e.preventDefault();
+            alert('Please configure at least one phone number when notifications are enabled.');
+            return;
+        }
+        
+        // Validate phone number format
+        const phoneRegex = /^\+\d{11,15}$/;
+        const phoneFields = ['phone_number_1', 'phone_number_2', 'phone_number_3', 'phone_number_4'];
+        
+        for (let i = 0; i < phoneFields.length; i++) {
+            const phone = document.getElementById(phoneFields[i]).value.trim();
+            if (phone && !phoneRegex.test(phone)) {
+                e.preventDefault();
+                alert(`Phone number ${i + 1} must be in format +1234567890`);
+                return;
+            }
+        }
+        
+        // Password validation
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (newPassword || confirmPassword) {
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match.');
+                return;
+            }
+            if (newPassword && newPassword.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

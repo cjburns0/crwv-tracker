@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CRWV Moon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Current Stock Price Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="display-1 mb-3">💰</div>
+                <h5 class="card-title">Current CRWV Price</h5>
+                {% if current_price %}
+                    <h2 class="text-success">${{ "%.2f"|format(current_price) }}</h2>
+                    {% if daily_change_percent is not none %}
+                        <div class="mb-2">
+                            <span class="badge fs-6 {{ 'bg-success' if daily_change_percent >= 0 else 'bg-danger' }}">
+                                <i data-feather="{{ 'trending-up' if daily_change_percent >= 0 else 'trending-down' }}" class="me-1"></i>
+                                {{ '+' if daily_change_percent >= 0 else '' }}{{ "%.2f"|format(daily_change_percent) }}%
+                            </span>
+                        </div>
+                    {% endif %}
+                    <small class="text-muted">
+                        <i data-feather="refresh-cw" class="me-1"></i>
+                        Last updated: <span id="last-updated">Just now</span>
+                    </small>
+                {% else %}
+                    <h2 class="text-warning">Unavailable</h2>
+                    <small class="text-muted">Unable to fetch current price</small>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <button class="btn btn-outline-primary w-100" onclick="refreshPrice()">
+                    <i data-feather="refresh-cw" class="me-1"></i>
+                    Refresh Price
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Status Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="display-1 mb-3">📱</div>
+                <h5 class="card-title">Daily Text Notifications</h5>
+                {% if settings.notifications_enabled %}
+                    <span class="badge bg-success fs-6 mb-2">Enabled</span>
+                    <p class="card-text">
+                        {% set phone_count = settings.get_phone_numbers()|length %}
+                        {% if phone_count > 0 %}
+                            {{ phone_count }} number{{ 's' if phone_count > 1 else '' }} configured
+                        {% else %}
+                            No numbers configured
+                        {% endif %}
+                    </p>
+                {% else %}
+                    <span class="badge bg-warning fs-6 mb-2">Disabled</span>
+                    <p class="card-text">Notifications are turned off</p>
+                {% endif %}
+                <small class="text-muted">
+                    Open: {{ settings.market_open_time }} EST<br>
+                    Close: {{ settings.market_close_time }} EST
+                </small>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('settings') }}" class="btn btn-outline-primary w-100">
+                    <i data-feather="settings" class="me-1"></i>
+                    Configure
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Status Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="display-1 mb-3">📊</div>
+                <h5 class="card-title">Market Status</h5>
+                <div id="market-status">
+                    <span class="badge bg-secondary fs-6">Checking...</span>
+                </div>
+                <p class="card-text mt-2">
+                    <small class="text-muted">
+                        Trading Hours:<br>
+                        Monday - Friday<br>
+                        9:30 AM - 4:00 PM EST
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Recent Stock Data -->
+{% if recent_stock_data %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="bar-chart-2" class="me-2"></i>
+                    Recent Stock Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Open</th>
+                                <th>Close</th>
+                                <th>High</th>
+                                <th>Low</th>
+                                <th>Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in recent_stock_data %}
+                            <tr>
+                                <td>{{ stock.date.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    {% if stock.open_price %}
+                                        ${{ "%.2f"|format(stock.open_price) }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stock.close_price %}
+                                        ${{ "%.2f"|format(stock.close_price) }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stock.high_price %}
+                                        ${{ "%.2f"|format(stock.high_price) }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stock.low_price %}
+                                        ${{ "%.2f"|format(stock.low_price) }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stock.volume %}
+                                        {{ "{:,}".format(stock.volume) }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Notifications -->
+{% if recent_notifications %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="bell" class="me-2"></i>
+                    Recent Notifications
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Sent At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for notification in recent_notifications %}
+                            <tr>
+                                <td>
+                                    <span class="badge 
+                                        {% if notification.notification_type == 'open' %}bg-info
+                                        {% elif notification.notification_type == 'close' %}bg-warning
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ notification.notification_type.title() }}
+                                    </span>
+                                </td>
+                                <td>${{ "%.2f"|format(notification.stock_price) }}</td>
+                                <td>
+                                    <code>****{{ notification.phone_number[-4:] }}</code>
+                                </td>
+                                <td>
+                                    {% if notification.status == 'sent' %}
+                                        <span class="badge bg-success">Sent</span>
+                                    {% elif notification.status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ notification.sent_at.strftime('%m/%d %I:%M %p') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <a href="{{ url_for('logs') }}" class="btn btn-outline-primary">
+                        View All Logs
+                        <i data-feather="arrow-right" class="ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Update market status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateMarketStatus();
+    
+    // Update every minute
+    setInterval(updateMarketStatus, 60000);
+});
+
+function updateMarketStatus() {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const hour = now.getHours();
+    const minutes = now.getMinutes();
+    const currentTime = hour * 60 + minutes;
+    
+    const marketOpen = 9 * 60 + 30; // 9:30 AM
+    const marketClose = 16 * 60; // 4:00 PM
+    
+    const statusElement = document.getElementById('market-status');
+    
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Monday to Friday
+        if (currentTime >= marketOpen && currentTime <= marketClose) {
+            statusElement.innerHTML = '<span class="badge bg-success fs-6">Open</span>';
+        } else {
+            statusElement.innerHTML = '<span class="badge bg-danger fs-6">Closed</span>';
+        }
+    } else {
+        statusElement.innerHTML = '<span class="badge bg-secondary fs-6">Weekend</span>';
+    }
+}
+
+function refreshPrice() {
+    const button = document.querySelector('button[onclick="refreshPrice()"]');
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Refreshing...';
+    button.disabled = true;
+    
+    fetch('/api/stock-data')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.current_price) {
+                location.reload(); // Simple refresh to update the price
+            } else {
+                throw new Error('Failed to fetch price');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Show error state but still restore button
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            feather.replace();
+        });
+}
+</script>
+{% endblock %}

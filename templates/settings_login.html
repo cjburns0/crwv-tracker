@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Settings Access - CRWV Moon{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i data-feather="lock" class="me-2"></i>
+                    Protected Settings
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="display-1 mb-3">🔒</div>
+                    <p class="text-muted">
+                        This settings page is password protected. Please enter the password to continue.
+                    </p>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" 
+                               class="form-control form-control-lg" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Enter settings password"
+                               required
+                               autofocus>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i data-feather="unlock" class="me-2"></i>
+                            Access Settings
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i data-feather="arrow-left" class="me-1"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i data-feather="help-circle" class="me-2"></i>
+                    Need Help?
+                </h6>
+                <p class="card-text text-muted small">
+                    If you've forgotten the settings password, you'll need to reset it manually in the database 
+                    or remove the password protection by setting the <code>settings_password_hash</code> field to NULL.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus on password input
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.focus();
+    }
+    
+    // Handle Enter key submission
+    passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.target.closest('form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}
