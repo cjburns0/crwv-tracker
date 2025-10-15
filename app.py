@@ -24,10 +24,16 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure the database
 import re
-database_url = os.environ.get("DATABASE_URL", "sqlite:///crwv_moon.db")
-if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    # Use PostgreSQL if DATABASE_URL is set
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+else:
+    # Use SQLite with custom path for Render
+    db_path = os.environ.get("DATABASE_PATH", "instance/crwv_moon.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
