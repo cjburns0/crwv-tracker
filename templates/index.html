@@ -12,6 +12,12 @@
                 <h5 class="card-title">Current CRWV Price</h5>
                 {% if current_price %}
                     <h2 class="text-success">${{ "%.2f"|format(current_price) }}</h2>
+                    <div class="mb-2">
+                        <span class="badge fs-6 {{ 'bg-success' if market_open else 'bg-secondary' }}">
+                            <i data-feather="{{ 'play-circle' if market_open else 'pause-circle' }}" class="me-1"></i>
+                            Market {{ 'Open' if market_open else 'Closed' }}
+                        </span>
+                    </div>
                     {% if daily_change_percent is not none %}
                         <div class="mb-2">
                             <span class="badge fs-6 {{ 'bg-success' if daily_change_percent >= 0 else 'bg-danger' }}">

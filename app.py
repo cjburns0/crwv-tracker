@@ -44,6 +44,16 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the app with the extension
 db.init_app(app)
 
+# Template context processor to make settings available globally
+@app.context_processor
+def inject_settings():
+    try:
+        from models import Settings
+        settings = Settings.get_settings()
+        return dict(settings=settings)
+    except:
+        return dict(settings=None)
+
 with app.app_context():
     # Import models to ensure tables are created
     import models
