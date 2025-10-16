@@ -66,6 +66,20 @@ def index():
         
         if current_price:
             from datetime import date, timedelta
+            from stock_service import get_daily_stock_data
+            
+            # Get today's close price (use current price if market is open, or today's close if market is closed)
+            today_close = current_price
+            if not market_open:
+                # Market is closed, try to get today's close price from database or fetch it
+                today_data = StockData.query.filter_by(date=date.today()).first()
+                if today_data and today_data.close_price:
+                    today_close = today_data.close_price
+                else:
+                    # Fetch today's close price
+                    today_stock_data = get_daily_stock_data()
+                    if today_stock_data and today_stock_data.get('close'):
+                        today_close = today_stock_data['close']
             
             # Daily change calculation
             yesterday = date.today() - timedelta(days=1)
@@ -83,7 +97,10 @@ def index():
                 yesterday_close = recent_stock_data[1].close_price
             
             if yesterday_close:
-                daily_change_percent = ((current_price - yesterday_close) / yesterday_close) * 100
+                daily_change_percent = ((today_close - yesterday_close) / yesterday_close) * 100
+                logging.info(f"Daily change calculated: {daily_change_percent:.2f}% (today close: {today_close}, yesterday close: {yesterday_close})")
+            else:
+                logging.warning(f"No yesterday close price found for daily change calculation")
             
             # Weekly change calculation (7 trading days ago)
             week_ago = date.today() - timedelta(days=7)
@@ -417,6 +434,23 @@ def api_stock_data():
         
         if current_price:
             from datetime import date, timedelta
+            from stock_service import get_daily_stock_data, is_market_open
+            
+            # Check if market is open
+            market_open = is_market_open()
+            
+            # Get today's close price (use current price if market is open, or today's close if market is closed)
+            today_close = current_price
+            if not market_open:
+                # Market is closed, try to get today's close price from database or fetch it
+                today_data = StockData.query.filter_by(date=date.today()).first()
+                if today_data and today_data.close_price:
+                    today_close = today_data.close_price
+                else:
+                    # Fetch today's close price
+                    today_stock_data = get_daily_stock_data()
+                    if today_stock_data and today_stock_data.get('close'):
+                        today_close = today_stock_data['close']
             
             # Daily change calculation
             yesterday = date.today() - timedelta(days=1)
@@ -436,7 +470,7 @@ def api_stock_data():
                     yesterday_close = recent_stock_data[1].close_price
             
             if yesterday_close:
-                daily_change_percent = ((current_price - yesterday_close) / yesterday_close) * 100
+                daily_change_percent = ((today_close - yesterday_close) / yesterday_close) * 100
             
             # Weekly change calculation (7 trading days ago)
             week_ago = date.today() - timedelta(days=7)
