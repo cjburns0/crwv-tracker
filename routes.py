@@ -23,11 +23,27 @@ def index():
             StockData.date.desc()
         ).limit(5).all()
         
-        # Calculate daily percentage change
+        # Calculate daily percentage change vs yesterday's close
         daily_change_percent = None
-        if recent_stock_data and len(recent_stock_data) >= 2 and current_price:
-            # Get yesterday's close price
-            yesterday_close = recent_stock_data[1].close_price if len(recent_stock_data) > 1 else None
+        yesterday_close = None
+        
+        if current_price:
+            # Try to get yesterday's close price from database first
+            from datetime import date, timedelta
+            yesterday = date.today() - timedelta(days=1)
+            
+            # Skip weekends - get last trading day
+            while yesterday.weekday() >= 5:  # Saturday = 5, Sunday = 6
+                yesterday -= timedelta(days=1)
+            
+            yesterday_data = StockData.query.filter_by(date=yesterday).first()
+            
+            if yesterday_data and yesterday_data.close_price:
+                yesterday_close = yesterday_data.close_price
+            elif recent_stock_data and len(recent_stock_data) >= 2:
+                # Fallback to most recent close price
+                yesterday_close = recent_stock_data[1].close_price
+            
             if yesterday_close:
                 daily_change_percent = ((current_price - yesterday_close) / yesterday_close) * 100
         
@@ -270,9 +286,38 @@ def api_stock_data():
     """API endpoint for current stock data"""
     try:
         current_price = get_current_stock_price()
+        
+        # Calculate daily percentage change vs yesterday's close
+        daily_change_percent = None
+        yesterday_close = None
+        
+        if current_price:
+            # Try to get yesterday's close price from database first
+            from datetime import date, timedelta
+            yesterday = date.today() - timedelta(days=1)
+            
+            # Skip weekends - get last trading day
+            while yesterday.weekday() >= 5:  # Saturday = 5, Sunday = 6
+                yesterday -= timedelta(days=1)
+            
+            yesterday_data = StockData.query.filter_by(date=yesterday).first()
+            
+            if yesterday_data and yesterday_data.close_price:
+                yesterday_close = yesterday_data.close_price
+            else:
+                # Fallback to most recent close price
+                recent_stock_data = StockData.query.order_by(StockData.date.desc()).limit(2).all()
+                if recent_stock_data and len(recent_stock_data) >= 2:
+                    yesterday_close = recent_stock_data[1].close_price
+            
+            if yesterday_close:
+                daily_change_percent = ((current_price - yesterday_close) / yesterday_close) * 100
+        
         return jsonify({
             'success': True,
             'current_price': current_price,
+            'daily_change_percent': daily_change_percent,
+            'yesterday_close': yesterday_close,
             'symbol': 'CRWV'
         })
     except Exception as e:

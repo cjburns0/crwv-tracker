@@ -234,6 +234,56 @@ function copyToClipboard(text, button = null) {
     });
 }
 
+// Refresh stock price function
+async function refreshPrice() {
+    const priceElement = document.querySelector('h2.text-success, h2.text-warning');
+    const changeElement = document.querySelector('.badge.fs-6');
+    const lastUpdatedElement = document.getElementById('last-updated');
+    
+    if (!priceElement || !lastUpdatedElement) return;
+    
+    try {
+        // Show loading state
+        priceElement.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+        priceElement.className = 'text-info';
+        
+        // Fetch new data
+        const data = await apiCall('/api/stock-data');
+        
+        if (data.success && data.current_price) {
+            // Update price
+            priceElement.innerHTML = `$${data.current_price.toFixed(2)}`;
+            priceElement.className = 'text-success';
+            
+            // Update percentage change
+            if (changeElement && data.daily_change_percent !== null) {
+                const isPositive = data.daily_change_percent >= 0;
+                changeElement.className = `badge fs-6 ${isPositive ? 'bg-success' : 'bg-danger'}`;
+                changeElement.innerHTML = `
+                    <i data-feather="${isPositive ? 'trending-up' : 'trending-down'}" class="me-1"></i>
+                    ${isPositive ? '+' : ''}${data.daily_change_percent.toFixed(2)}%
+                `;
+                feather.replace();
+            }
+            
+            // Update last updated time
+            lastUpdatedElement.textContent = 'Just now';
+            
+            showNotification('Price updated successfully!', 'success');
+        } else {
+            // Show error state
+            priceElement.innerHTML = 'Unavailable';
+            priceElement.className = 'text-warning';
+            showNotification('Failed to fetch price data', 'danger');
+        }
+    } catch (error) {
+        console.error('Error refreshing price:', error);
+        priceElement.innerHTML = 'Unavailable';
+        priceElement.className = 'text-warning';
+        showNotification('Error fetching price data', 'danger');
+    }
+}
+
 // Export functions for global use
 window.CRWVMoon = {
     setButtonLoading,
@@ -245,5 +295,9 @@ window.CRWVMoon = {
     timeAgo,
     copyToClipboard,
     formatPhoneNumber,
-    validatePhoneNumber
+    validatePhoneNumber,
+    refreshPrice
 };
+
+// Make refreshPrice globally available
+window.refreshPrice = refreshPrice;
