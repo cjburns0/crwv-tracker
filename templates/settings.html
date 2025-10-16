@@ -29,11 +29,11 @@
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                    {{ user.name[0].upper() }}
+                                                    {{ user.get_masked_name()[0].upper() }}
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <h6 class="mb-0">{{ user.name }}</h6>
-                                                    <small class="text-muted">{{ user.phone_number }}</small>
+                                                    <h6 class="mb-0">{{ user.get_masked_name() }}</h6>
+                                                    <small class="text-muted">{{ user.get_masked_phone() }}</small>
                                                 </div>
                                                 <a href="{{ url_for('user_login', user_id=user.id) }}" class="btn btn-outline-primary btn-sm">
                                                     <i data-feather="settings" class="me-1"></i>

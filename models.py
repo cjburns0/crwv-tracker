@@ -12,6 +12,31 @@ class User(db.Model):
     
     def __repr__(self):
         return f'<User {self.name}>'
+    
+    def get_masked_phone(self):
+        """Return phone number with only last 4 digits visible"""
+        if not self.phone_number:
+            return "No phone number"
+        
+        phone = self.phone_number
+        if len(phone) <= 4:
+            return "*" * len(phone)
+        
+        # Show only last 4 digits, mask the rest
+        masked_length = len(phone) - 4
+        return "*" * masked_length + phone[-4:]
+    
+    def get_masked_name(self):
+        """Return name with only first letter visible"""
+        if not self.name:
+            return "No name"
+        
+        name = self.name.strip()
+        if len(name) <= 1:
+            return name
+        
+        # Show first letter, mask the rest
+        return name[0] + "*" * (len(name) - 1)
 
 class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)

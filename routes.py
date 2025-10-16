@@ -13,6 +13,10 @@ def index():
         # Get current stock price
         current_price = get_current_stock_price()
         
+        # Check if market is open
+        from stock_service import is_market_open
+        market_open = is_market_open()
+        
         # Get recent notifications
         recent_notifications = NotificationLog.query.order_by(
             NotificationLog.sent_at.desc()
@@ -80,6 +84,7 @@ def index():
                              current_price=current_price,
                              daily_change_percent=daily_change_percent,
                              weekly_change_percent=weekly_change_percent,
+                             market_open=market_open,
                              recent_notifications=recent_notifications,
                              recent_stock_data=recent_stock_data,
                              settings=settings)
@@ -90,6 +95,7 @@ def index():
                              current_price=None,
                              daily_change_percent=None,
                              weekly_change_percent=None,
+                             market_open=False,
                              recent_notifications=[],
                              recent_stock_data=[],
                              settings=Settings.get_settings())

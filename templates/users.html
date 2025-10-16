@@ -21,11 +21,11 @@
                                 <div class="card-body">
                                     <div class="d-flex align-items-center mb-3">
                                         <div class="avatar bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                            {{ user.name[0].upper() }}
+                                            {{ user.get_masked_name()[0].upper() }}
                                         </div>
                                         <div>
-                                            <h6 class="mb-0">{{ user.name }}</h6>
-                                            <small class="text-muted">{{ user.phone_number }}</small>
+                                            <h6 class="mb-0">{{ user.get_masked_name() }}</h6>
+                                            <small class="text-muted">{{ user.get_masked_phone() }}</small>
                                         </div>
                                     </div>
                                     
@@ -56,8 +56,8 @@
                             No users have been registered yet. Create the first account below.
                         </p>
                         <a href="{{ url_for('register') }}" class="btn btn-primary">
-                            <i data-feather="user-plus" class="me-1"></i>
-                            Create First Account
+                            <i data-feather="smartphone" class="me-1"></i>
+                            Get Text Alerts
                         </a>
                     </div>
                 {% endif %}
@@ -96,8 +96,8 @@
                 
                 <div class="mt-3">
                     <a href="{{ url_for('register') }}" class="btn btn-primary">
-                        <i data-feather="user-plus" class="me-1"></i>
-                        Create New Account
+                        <i data-feather="smartphone" class="me-1"></i>
+                        Get Text Alerts
                     </a>
                     <a href="{{ url_for('settings') }}" class="btn btn-outline-primary ms-2">
                         <i data-feather="settings" class="me-1"></i>
