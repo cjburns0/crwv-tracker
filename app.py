@@ -32,7 +32,9 @@ if database_url:
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 else:
     # Use SQLite with custom path for Render
-    db_path = os.environ.get("DATABASE_PATH", "instance/crwv_moon.db")
+    db_path = os.environ.get("DATABASE_PATH", "crwv_moon.db")
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else ".", exist_ok=True)
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
