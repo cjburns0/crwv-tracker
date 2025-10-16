@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Register - CRWV Moon{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i data-feather="user-plus" class="me-2"></i>
+                    Create Account
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="display-1 mb-3">👤</div>
+                    <p class="text-muted">
+                        Create your account to receive CRWV stock notifications.
+                    </p>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="name" 
+                               name="name" 
+                               placeholder="Enter your full name"
+                               required
+                               autofocus>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <input type="tel" 
+                               class="form-control" 
+                               id="phone_number" 
+                               name="phone_number" 
+                               placeholder="+1234567890"
+                               required>
+                        <div class="form-text">Include country code (e.g., +1 for US)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Enter password"
+                               required>
+                        <div class="form-text">Minimum 6 characters</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="confirm_password" 
+                               name="confirm_password" 
+                               placeholder="Confirm password"
+                               required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i data-feather="user-plus" class="me-2"></i>
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <a href="{{ url_for('users') }}" class="btn btn-outline-secondary">
+                        <i data-feather="users" class="me-1"></i>
+                        View All Users
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary ms-2">
+                        <i data-feather="home" class="me-1"></i>
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i data-feather="info" class="me-2"></i>
+                    What happens next?
+                </h6>
+                <ul class="list-unstyled text-muted small">
+                    <li>✅ Your account will be created immediately</li>
+                    <li>✅ You'll be redirected to login with your new password</li>
+                    <li>✅ You can access your personal settings anytime</li>
+                    <li>✅ You'll receive CRWV notifications at market open/close</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[method="POST"]');
+    const phoneInput = document.getElementById('phone_number');
+    
+    // Phone number formatting
+    phoneInput.addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');
+        if (value.length > 0 && !value.startsWith('1')) {
+            value = '1' + value;
+        }
+        if (value.length > 1) {
+            this.value = '+' + value;
+        }
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone_number').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        // Validate name
+        if (name.length < 2) {
+            e.preventDefault();
+            alert('Name must be at least 2 characters long.');
+            return;
+        }
+        
+        // Validate phone number format
+        const phoneRegex = /^\+\d{11,15}$/;
+        if (!phoneRegex.test(phone)) {
+            e.preventDefault();
+            alert('Phone number must be in format +1234567890');
+            return;
+        }
+        
+        // Validate password
+        if (password.length < 6) {
+            e.preventDefault();
+            alert('Password must be at least 6 characters long.');
+            return;
+        }
+        
+        // Validate password confirmation
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match.');
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

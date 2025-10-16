@@ -216,6 +216,56 @@ def users():
     users_list = User.query.filter_by(is_active=True).all()
     return render_template('users.html', users=users_list)
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration page"""
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name', '').strip()
+            phone_number = request.form.get('phone_number', '').strip()
+            password = request.form.get('password', '').strip()
+            confirm_password = request.form.get('confirm_password', '').strip()
+            
+            # Validation
+            if not name or not phone_number or not password:
+                flash('All fields are required.', 'error')
+                return render_template('register.html')
+            
+            if password != confirm_password:
+                flash('Passwords do not match.', 'error')
+                return render_template('register.html')
+            
+            if len(password) < 6:
+                flash('Password must be at least 6 characters long.', 'error')
+                return render_template('register.html')
+            
+            # Check if phone number already exists
+            existing_user = User.query.filter_by(phone_number=phone_number).first()
+            if existing_user:
+                flash('This phone number is already registered.', 'error')
+                return render_template('register.html')
+            
+            # Create new user
+            user = User(
+                name=name,
+                phone_number=phone_number,
+                password_hash=generate_password_hash(password),
+                is_active=True
+            )
+            
+            db.session.add(user)
+            db.session.commit()
+            
+            flash(f'Welcome, {name}! Your account has been created successfully.', 'success')
+            return redirect(url_for('user_login', user_id=user.id))
+            
+        except Exception as e:
+            logging.error(f"Error creating user: {e}")
+            db.session.rollback()
+            flash('Error creating account. Please try again.', 'error')
+    
+    return render_template('register.html')
+
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     """Settings page for configuring phone numbers and notification preferences"""
