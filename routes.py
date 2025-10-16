@@ -17,6 +17,35 @@ def index():
         from stock_service import is_market_open
         market_open = is_market_open()
         
+        # Get current Eastern time and market countdown
+        import pytz
+        from datetime import datetime, timedelta
+        
+        eastern = pytz.timezone('US/Eastern')
+        now_eastern = datetime.now(eastern)
+        current_time_est = now_eastern.strftime('%I:%M %p ET')
+        
+        # Calculate time until market opens
+        market_open_time = None
+        hours_until_open = None
+        
+        if not market_open:
+            # Find next market open time
+            next_open = now_eastern.replace(hour=9, minute=30, second=0, microsecond=0)
+            
+            # If it's past 4 PM today, market opens tomorrow
+            if now_eastern.hour >= 16:
+                next_open += timedelta(days=1)
+            
+            # Skip weekends
+            while next_open.weekday() >= 5:  # Saturday = 5, Sunday = 6
+                next_open += timedelta(days=1)
+            
+            # Calculate hours until market opens
+            time_diff = next_open - now_eastern
+            hours_until_open = time_diff.total_seconds() / 3600
+            market_open_time = next_open.strftime('%I:%M %p ET')
+        
         # Get recent notifications
         recent_notifications = NotificationLog.query.order_by(
             NotificationLog.sent_at.desc()
@@ -85,6 +114,9 @@ def index():
                              daily_change_percent=daily_change_percent,
                              weekly_change_percent=weekly_change_percent,
                              market_open=market_open,
+                             current_time_est=current_time_est,
+                             market_open_time=market_open_time,
+                             hours_until_open=hours_until_open,
                              recent_notifications=recent_notifications,
                              recent_stock_data=recent_stock_data,
                              settings=settings)
@@ -96,6 +128,9 @@ def index():
                              daily_change_percent=None,
                              weekly_change_percent=None,
                              market_open=False,
+                             current_time_est="Unknown",
+                             market_open_time=None,
+                             hours_until_open=None,
                              recent_notifications=[],
                              recent_stock_data=[],
                              settings=Settings.get_settings())

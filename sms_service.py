@@ -1,6 +1,7 @@
 import os
 import logging
 from datetime import datetime
+import pytz
 from twilio.rest import Client
 from app import db
 from models import NotificationLog
@@ -38,15 +39,19 @@ def send_stock_notification(phone_number: str, notification_type: str, price: fl
     Returns True on success, False on failure
     """
     try:
+        # Get current time in Eastern timezone
+        eastern = pytz.timezone('US/Eastern')
+        now_eastern = datetime.now(eastern)
+        
         # Format the message (simplified for better deliverability)
         if notification_type == 'open':
-            message = f"CRWV opened at ${price:.2f} at {datetime.now().strftime('%I:%M %p ET')}"
+            message = f"CRWV opened at ${price:.2f} at {now_eastern.strftime('%I:%M %p ET')}"
         elif notification_type == 'close':
-            message = f"CRWV closed at ${price:.2f} at {datetime.now().strftime('%I:%M %p ET')}"
+            message = f"CRWV closed at ${price:.2f} at {now_eastern.strftime('%I:%M %p ET')}"
         elif notification_type == 'test':
-            message = f"Test: CRWV price is ${price:.2f} at {datetime.now().strftime('%I:%M %p ET')}. Notifications working."
+            message = f"Test: CRWV price is ${price:.2f} at {now_eastern.strftime('%I:%M %p ET')}. Notifications working."
         else:
-            message = f"CRWV: ${price:.2f} at {datetime.now().strftime('%I:%M %p ET')}"
+            message = f"CRWV: ${price:.2f} at {now_eastern.strftime('%I:%M %p ET')}"
         
         # Send the message
         message_sid = send_twilio_message(phone_number, message)

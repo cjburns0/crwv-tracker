@@ -18,6 +18,26 @@
                             Market {{ 'Open' if market_open else 'Closed' }}
                         </span>
                     </div>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i data-feather="clock" class="me-1"></i>
+                            Current time: {{ current_time_est }}
+                        </small>
+                    </div>
+                    {% if not market_open and market_open_time %}
+                    <div class="mb-2">
+                        <small class="text-info">
+                            <i data-feather="calendar" class="me-1"></i>
+                            Opens at {{ market_open_time }}
+                        </small>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-warning">
+                            <i data-feather="timer" class="me-1"></i>
+                            {{ "%.1f"|format(hours_until_open) }} hours until open
+                        </small>
+                    </div>
+                    {% endif %}
                     {% if daily_change_percent is not none %}
                         <div class="mb-2">
                             <span class="badge fs-6 {{ 'bg-success' if daily_change_percent >= 0 else 'bg-danger' }}">
