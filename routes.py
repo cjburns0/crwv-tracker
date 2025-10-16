@@ -64,23 +64,25 @@ def index():
         weekly_change_percent = None
         week_ago_close = None
         
-        if current_price:
-            from datetime import date, timedelta
-            from stock_service import get_daily_stock_data
-            
-            # Get today's close price (use current price if market is open, or today's close if market is closed)
-            today_close = current_price
-            if not market_open:
-                # Market is closed, try to get today's close price from database or fetch it
-                today_data = StockData.query.filter_by(date=date.today()).first()
-                if today_data and today_data.close_price:
-                    today_close = today_data.close_price
-                else:
-                    # Fetch today's close price
-                    today_stock_data = get_daily_stock_data()
-                    if today_stock_data and today_stock_data.get('close'):
-                        today_close = today_stock_data['close']
-            
+        # Try to calculate daily change even if current_price is None
+        from datetime import date, timedelta
+        from stock_service import get_daily_stock_data
+        
+        # Get today's close price
+        today_close = current_price
+        if current_price is None or not market_open:
+            # Try to get today's close price from database or fetch it
+            today_data = StockData.query.filter_by(date=date.today()).first()
+            if today_data and today_data.close_price:
+                today_close = today_data.close_price
+            else:
+                # Fetch today's close price
+                today_stock_data = get_daily_stock_data()
+                if today_stock_data and today_stock_data.get('close'):
+                    today_close = today_stock_data['close']
+        
+        # Only calculate if we have a price to work with
+        if today_close:
             # Daily change calculation
             yesterday = date.today() - timedelta(days=1)
             
@@ -101,6 +103,8 @@ def index():
                 logging.info(f"Daily change calculated: {daily_change_percent:.2f}% (today close: {today_close}, yesterday close: {yesterday_close})")
             else:
                 logging.warning(f"No yesterday close price found for daily change calculation")
+        else:
+            logging.warning(f"No price data available for daily change calculation")
             
             # Weekly change calculation (7 trading days ago)
             week_ago = date.today() - timedelta(days=7)
@@ -432,26 +436,28 @@ def api_stock_data():
         weekly_change_percent = None
         week_ago_close = None
         
-        if current_price:
-            from datetime import date, timedelta
-            from stock_service import get_daily_stock_data, is_market_open
-            
-            # Check if market is open
-            market_open = is_market_open()
-            
-            # Get today's close price (use current price if market is open, or today's close if market is closed)
-            today_close = current_price
-            if not market_open:
-                # Market is closed, try to get today's close price from database or fetch it
-                today_data = StockData.query.filter_by(date=date.today()).first()
-                if today_data and today_data.close_price:
-                    today_close = today_data.close_price
-                else:
-                    # Fetch today's close price
-                    today_stock_data = get_daily_stock_data()
-                    if today_stock_data and today_stock_data.get('close'):
-                        today_close = today_stock_data['close']
-            
+        # Try to calculate daily change even if current_price is None
+        from datetime import date, timedelta
+        from stock_service import get_daily_stock_data, is_market_open
+        
+        # Check if market is open
+        market_open = is_market_open()
+        
+        # Get today's close price
+        today_close = current_price
+        if current_price is None or not market_open:
+            # Try to get today's close price from database or fetch it
+            today_data = StockData.query.filter_by(date=date.today()).first()
+            if today_data and today_data.close_price:
+                today_close = today_data.close_price
+            else:
+                # Fetch today's close price
+                today_stock_data = get_daily_stock_data()
+                if today_stock_data and today_stock_data.get('close'):
+                    today_close = today_stock_data['close']
+        
+        # Only calculate if we have a price to work with
+        if today_close:
             # Daily change calculation
             yesterday = date.today() - timedelta(days=1)
             
