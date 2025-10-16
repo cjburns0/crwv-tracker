@@ -237,7 +237,7 @@ function copyToClipboard(text, button = null) {
 // Refresh stock price function
 async function refreshPrice() {
     const priceElement = document.querySelector('h2.text-success, h2.text-warning');
-    const changeElement = document.querySelector('.badge.fs-6');
+    const changeElements = document.querySelectorAll('.badge.fs-6');
     const lastUpdatedElement = document.getElementById('last-updated');
     
     if (!priceElement || !lastUpdatedElement) return;
@@ -255,16 +255,29 @@ async function refreshPrice() {
             priceElement.innerHTML = `$${data.current_price.toFixed(2)}`;
             priceElement.className = 'text-success';
             
-            // Update percentage change
-            if (changeElement && data.daily_change_percent !== null) {
+            // Update daily percentage change (first badge)
+            if (changeElements[0] && data.daily_change_percent !== null) {
                 const isPositive = data.daily_change_percent >= 0;
-                changeElement.className = `badge fs-6 ${isPositive ? 'bg-success' : 'bg-danger'}`;
-                changeElement.innerHTML = `
+                changeElements[0].className = `badge fs-6 ${isPositive ? 'bg-success' : 'bg-danger'}`;
+                changeElements[0].innerHTML = `
                     <i data-feather="${isPositive ? 'trending-up' : 'trending-down'}" class="me-1"></i>
                     ${isPositive ? '+' : ''}${data.daily_change_percent.toFixed(2)}%
                 `;
-                feather.replace();
             }
+            
+            // Update weekly percentage change (second badge)
+            if (changeElements[1] && data.weekly_change_percent !== null) {
+                const isPositive = data.weekly_change_percent >= 0;
+                changeElements[1].className = `badge fs-6 ${isPositive ? 'bg-success' : 'bg-danger'}`;
+                changeElements[1].style.opacity = '0.8';
+                changeElements[1].innerHTML = `
+                    <i data-feather="${isPositive ? 'trending-up' : 'trending-down'}" class="me-1"></i>
+                    ${isPositive ? '+' : ''}${data.weekly_change_percent.toFixed(2)}% (7d)
+                `;
+            }
+            
+            // Re-initialize feather icons
+            feather.replace();
             
             // Update last updated time
             lastUpdatedElement.textContent = 'Just now';

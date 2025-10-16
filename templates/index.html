@@ -20,6 +20,14 @@
                             </span>
                         </div>
                     {% endif %}
+                    {% if weekly_change_percent is not none %}
+                        <div class="mb-2">
+                            <span class="badge fs-6 {{ 'bg-success' if weekly_change_percent >= 0 else 'bg-danger' }}" style="opacity: 0.8;">
+                                <i data-feather="{{ 'trending-up' if weekly_change_percent >= 0 else 'trending-down' }}" class="me-1"></i>
+                                {{ '+' if weekly_change_percent >= 0 else '' }}{{ "%.2f"|format(weekly_change_percent) }}% (7d)
+                            </span>
+                        </div>
+                    {% endif %}
                     <small class="text-muted">
                         <i data-feather="refresh-cw" class="me-1"></i>
                         Last updated: <span id="last-updated">Just now</span>

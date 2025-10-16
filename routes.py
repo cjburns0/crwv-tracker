@@ -27,9 +27,14 @@ def index():
         daily_change_percent = None
         yesterday_close = None
         
+        # Calculate 7-day percentage change
+        weekly_change_percent = None
+        week_ago_close = None
+        
         if current_price:
-            # Try to get yesterday's close price from database first
             from datetime import date, timedelta
+            
+            # Daily change calculation
             yesterday = date.today() - timedelta(days=1)
             
             # Skip weekends - get last trading day
@@ -46,12 +51,35 @@ def index():
             
             if yesterday_close:
                 daily_change_percent = ((current_price - yesterday_close) / yesterday_close) * 100
+            
+            # Weekly change calculation (7 trading days ago)
+            week_ago = date.today() - timedelta(days=7)
+            
+            # Skip weekends to get 7 trading days ago
+            trading_days_back = 0
+            while trading_days_back < 7:
+                if week_ago.weekday() < 5:  # Monday-Friday
+                    trading_days_back += 1
+                if trading_days_back < 7:
+                    week_ago -= timedelta(days=1)
+            
+            week_ago_data = StockData.query.filter_by(date=week_ago).first()
+            
+            if week_ago_data and week_ago_data.close_price:
+                week_ago_close = week_ago_data.close_price
+            elif recent_stock_data and len(recent_stock_data) >= 7:
+                # Fallback to 7th most recent close price
+                week_ago_close = recent_stock_data[6].close_price
+            
+            if week_ago_close:
+                weekly_change_percent = ((current_price - week_ago_close) / week_ago_close) * 100
         
         settings = Settings.get_settings()
         
         return render_template('index.html', 
                              current_price=current_price,
                              daily_change_percent=daily_change_percent,
+                             weekly_change_percent=weekly_change_percent,
                              recent_notifications=recent_notifications,
                              recent_stock_data=recent_stock_data,
                              settings=settings)
@@ -61,6 +89,7 @@ def index():
         return render_template('index.html', 
                              current_price=None,
                              daily_change_percent=None,
+                             weekly_change_percent=None,
                              recent_notifications=[],
                              recent_stock_data=[],
                              settings=Settings.get_settings())
@@ -291,9 +320,14 @@ def api_stock_data():
         daily_change_percent = None
         yesterday_close = None
         
+        # Calculate 7-day percentage change
+        weekly_change_percent = None
+        week_ago_close = None
+        
         if current_price:
-            # Try to get yesterday's close price from database first
             from datetime import date, timedelta
+            
+            # Daily change calculation
             yesterday = date.today() - timedelta(days=1)
             
             # Skip weekends - get last trading day
@@ -312,12 +346,38 @@ def api_stock_data():
             
             if yesterday_close:
                 daily_change_percent = ((current_price - yesterday_close) / yesterday_close) * 100
+            
+            # Weekly change calculation (7 trading days ago)
+            week_ago = date.today() - timedelta(days=7)
+            
+            # Skip weekends to get 7 trading days ago
+            trading_days_back = 0
+            while trading_days_back < 7:
+                if week_ago.weekday() < 5:  # Monday-Friday
+                    trading_days_back += 1
+                if trading_days_back < 7:
+                    week_ago -= timedelta(days=1)
+            
+            week_ago_data = StockData.query.filter_by(date=week_ago).first()
+            
+            if week_ago_data and week_ago_data.close_price:
+                week_ago_close = week_ago_data.close_price
+            else:
+                # Fallback to 7th most recent close price
+                recent_stock_data = StockData.query.order_by(StockData.date.desc()).limit(7).all()
+                if recent_stock_data and len(recent_stock_data) >= 7:
+                    week_ago_close = recent_stock_data[6].close_price
+            
+            if week_ago_close:
+                weekly_change_percent = ((current_price - week_ago_close) / week_ago_close) * 100
         
         return jsonify({
             'success': True,
             'current_price': current_price,
             'daily_change_percent': daily_change_percent,
+            'weekly_change_percent': weekly_change_percent,
             'yesterday_close': yesterday_close,
+            'week_ago_close': week_ago_close,
             'symbol': 'CRWV'
         })
     except Exception as e:
