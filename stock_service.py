@@ -1,6 +1,7 @@
 import yfinance as yf
 import logging
 from datetime import datetime, date
+import pytz
 from app import db
 from models import StockData
 
@@ -127,13 +128,15 @@ def is_market_open():
     Simplified check - assumes market is open Mon-Fri 9:30-16:00 EST
     """
     try:
-        now = datetime.now()
+        # Get current time in Eastern timezone
+        eastern = pytz.timezone('US/Eastern')
+        now = datetime.now(eastern)
         
         # Check if it's a weekday (0=Monday, 6=Sunday)
         if now.weekday() >= 5:  # Saturday or Sunday
             return False
         
-        # Check time (this is simplified - doesn't account for holidays)
+        # Check time in Eastern timezone
         current_time = now.time()
         market_open = datetime.strptime("09:30", "%H:%M").time()
         market_close = datetime.strptime("16:00", "%H:%M").time()
