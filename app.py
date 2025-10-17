@@ -25,7 +25,18 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # Configure the database
 import re
 database_url = os.environ.get("DATABASE_URL")
-if database_url:
+
+# Check for individual database connection parameters (for Render IPv6 compatibility)
+db_host = os.environ.get("DB_HOST")
+db_port = os.environ.get("DB_PORT")
+db_name = os.environ.get("DB_NAME")
+db_user = os.environ.get("DB_USER")
+db_password = os.environ.get("DB_PASSWORD")
+
+if db_host and db_port and db_name and db_user and db_password:
+    # Use individual parameters (IPv4 compatible)
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+elif database_url:
     # Use PostgreSQL if DATABASE_URL is set
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
